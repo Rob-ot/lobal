@@ -1,0 +1,35 @@
+{
+  "name": "lobal",
+  "version": "0.0.0",
+  "description": "Use the local version of global npm modules",
+  "main": "lobal.js",
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script/register test.coffee",
+    "testwatch": "mocha --watch --compilers coffee:coffee-script/register test.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Rob-ot/lobal.git"
+  },
+  "keywords": [
+    "npm",
+    "global",
+    "local",
+    "bash",
+    "shell"
+  ],
+  "author": "Rob Middleton",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Rob-ot/lobal/issues"
+  },
+  "homepage": "https://github.com/Rob-ot/lobal",
+  "devDependencies": {
+    "coffee-script": "^1.8.0",
+    "mocha": "^2.0.1",
+    "mock-fs": "^2.3.2"
+  },
+  "dependencies": {
+    "findup": "^0.1.5"
+  }
+}
