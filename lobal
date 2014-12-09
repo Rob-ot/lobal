@@ -22,9 +22,9 @@ exports.bashPathEntry = function () {
 
 exports.findBashFile = function (cb) {
   var attempts = [
+    path.join(osenv.home(), '.bashrc'),
     path.join(osenv.home(), '.bash_profile'),
-    path.join(osenv.home(), '.profile'),
-    path.join(osenv.home(), '.bashrc')
+    path.join(osenv.home(), '.profile')
   ]
 
   async.detect(attempts, fs.exists, cb)

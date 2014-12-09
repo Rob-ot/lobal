@@ -47,7 +47,7 @@ Look for the `module` binary locally or globally and execute the file.
 
 ## How it works
 
-The first time you add a shim local will create a .lobal_shims folder in your home folder and add that folder to your PATH by modifying your .bash_profile, .profile, or .bashrc file.
+The first time you add a shim local will create a .lobal_shims folder in your home folder and add that folder to your PATH by modifying your .bashrc, .bash_profile, or .profile file.
 
 Shims are just tiny shell scripts that are added to the .lobal_shims folder. The shim scripts just run `lobal exec` passing your module name, ex: `lobal exec coffee`.
 
