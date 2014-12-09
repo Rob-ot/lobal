@@ -4,7 +4,7 @@
   "description": "Use the local version of global npm modules",
   "main": "lobal",
   "bin": {
-    "lobal": "lobal",
+    "lobal": "lobal"
   },
   "preferGlobal": true,
   "scripts": {
