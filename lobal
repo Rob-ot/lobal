@@ -82,7 +82,7 @@ exports.findProjectDirectory = function (dir, cb) {
 }
 
 exports.shimContents = function (shimName) {
-  return 'lobal exec "' + shimName + '"'
+  return 'lobal exec "' + shimName + '" "${@:1}"'
 }
 
 exports.addShim = function (shimName, cb) {
