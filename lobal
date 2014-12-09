@@ -33,7 +33,7 @@ exports.findBashFile = function (cb) {
 function ensureShimsDirectory (cb) {
   fs.exists(exports.shimsDirectory, function (exists) {
     if (exists) return cb()
-    exports.log('Creating shim folder:', exports.shimsDirectory)
+    exports.log('Creating shim folder: ' + exports.shimsDirectory)
     fs.mkdir(exports.shimsDirectory, function (err) {
       if (err) throw err
       cb()
