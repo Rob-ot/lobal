@@ -139,7 +139,6 @@ exports.cli = function (argv, cwd) {
       }
     })
     .callback(function (options) {
-      console.log('exec', options)
       exports.findProjectDirectory(cwd, function (err, wdModule) {
         if (err) throw err
 
