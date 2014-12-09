@@ -12,6 +12,7 @@ $ npm install -g lobal
 
 # add a shim
 $ lobal add coffee
+# (you may need to open a new terminal to get the updates to PATH)
 
 # lobal uses the locally installed coffee binary
 $ cd ~/project1
