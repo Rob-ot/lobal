@@ -30,6 +30,8 @@ $ coffee -v
 CoffeeScript version 1.6.0
 ```
 
+** Sorry no windows support a this time but it should be possible **
+
 ## API
 
 #### lobal add `module`
