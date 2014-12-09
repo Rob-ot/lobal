@@ -27,7 +27,7 @@ exports.findBashFile = function (cb) {
     path.join(osenv.home(), '.profile')
   ]
 
-  async.detect(attempts, fs.exists, cb)
+  async.detectSeries(attempts, fs.exists, cb)
 }
 
 function ensureShimsDirectory (cb) {
