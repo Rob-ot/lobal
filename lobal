@@ -142,36 +142,42 @@ exports.cli = function (argv, cwd) {
       exports.findProjectDirectory(cwd, function (err, wdModule) {
         if (err) throw err
 
+        function cont (localModuleExists, wdPackage) {
+          if (localModuleExists) {
+            var message = 'Using local ' + options.module + ' from'
+            if (wdPackage.name) message += ' "' + wdPackage.name + '"'
+            else message +=  ' "' + wdModule + '"'
+            exports.log(message)
+            exports.runCommand(localModule, passthroughArgs)
+          }
+          else {
+            npm.load({global: true, silent: true}, function () {
+              npm.commands.bin([], true, function (err, globalBinFolder) {
+                var globalModule = path.join(globalBinFolder, options.module)
+
+                fs.exists(globalModule, function (globalModuleExists) {
+                  if (globalModuleExists) {
+                    exports.log('Using global ' + options.module)
+                    exports.runCommand(globalModule, passthroughArgs)
+                  }
+                  else {
+                    console.error('Couldn\'t find module "' + options.module + '" \n'
+                      + 'Tried \"' + localModule + '\"\nand \"' + globalModule + '\"')
+                    process.exit(1)
+                  }
+                })
+              })//  /
+            })//   />-|o  - These are some steep moguls!
+          }//     /
+        }
+
+        if (!wdModule) return cont(false, {})
+
         var localModule = path.join(wdModule, 'node_modules', '.bin', options.module)
 
         fs.exists(localModule, function (localModuleExists) {
           readPackageInfo(wdModule, function (wdPackage) {
-            if (localModuleExists) {
-              var message = 'Using local ' + options.module + ' from'
-              if (wdPackage.name) message += ' "' + wdPackage.name + '"'
-              else message +=  ' "' + wdModule + '"'
-              exports.log(message)
-              exports.runCommand(localModule, passthroughArgs)
-            }
-            else {
-              npm.load({global: true, silent: true}, function () {
-                npm.commands.bin([], true, function (err, globalBinFolder) {
-                  var globalModule = path.join(globalBinFolder, options.module)
-
-                  fs.exists(globalModule, function (globalModuleExists) {
-                    if (globalModuleExists) {
-                      exports.log('Using global ' + options.module)
-                      exports.runCommand(globalModule, passthroughArgs)
-                    }
-                    else {
-                      console.error('Couldn\'t find module "' + options.module + '" \n'
-                        + 'Tried \"' + localModule + '\"\nand \"' + globalModule + '\"')
-                      process.exit(1)
-                    }
-                  })
-                })//  /
-              })//   />-|o  - These are some steep moguls!
-            }//     /
+            cont(localModuleExists, wdPackage)
           })
         })
       })

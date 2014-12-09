@@ -23,7 +23,7 @@ CoffeeScript version 1.7.0
 ~/project2$ coffee -v
 CoffeeScript version 1.8.1
 
-# lobal will also use the globally installed module if you aren't in a project directory
+# lobal will also use the globally installed module if you arent in a project directory
 ~/project2$ npm install -g coffee-script@1.6.0
 ~/project2$ cd ~
 $ coffee -v
