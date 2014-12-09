@@ -1,0 +1,220 @@
+#!/usr/bin/env node
+
+var fs = require('fs')
+var path = require('path')
+var child_process = require('child_process')
+var npm = require('npm')
+
+var async = require('async')
+var findup = require('findup')
+var osenv = require('osenv')
+var nomnom = require('nomnom')
+
+exports.log = function (message) {
+  console.info('(lobal) ' + message)
+}
+
+exports.shimsDirectory = path.join(osenv.home(), '.lobal_shims')
+
+exports.bashPathEntry = function () {
+  return '\n# Added automatically by lobal http://npm.im/lobal\nif [ -d "$HOME/.lobal_shims" ] ; then\n    PATH="$HOME/.lobal_shims:$PATH"\nfi\n'
+}
+
+exports.findBashFile = function (cb) {
+  var attempts = [
+    path.join(osenv.home(), '.bash_profile'),
+    path.join(osenv.home(), '.profile'),
+    path.join(osenv.home(), '.bashrc')
+  ]
+
+  async.detect(attempts, fs.exists, cb)
+}
+
+function ensureShimsDirectory (cb) {
+  fs.exists(exports.shimsDirectory, function (exists) {
+    if (exists) return cb()
+    exports.log('Creating shim folder:', exports.shimsDirectory)
+    fs.mkdir(exports.shimsDirectory, function (err) {
+      if (err) throw err
+      cb()
+    })
+  })
+}
+
+function ensurePathShimmed (cb) {
+  exports.findBashFile(function (bashFile) {
+    if (!bashFile) throw new Error('Couldn\'t determine your bash config file.')
+
+    fs.readFile(bashFile, function (err, file) {
+      if (err) throw err
+      var index = file.toString().indexOf('.lobal_shims')
+      if (index >= 0) return cb()
+
+      exports.log('Adding PATH entry to ' + bashFile)
+      fs.appendFile(bashFile, exports.bashPathEntry(), function (err) {
+        if (err) throw err
+        cb()
+      })
+    })
+  })
+}
+
+exports.ensureSetUp = function (cb) {
+  ensureShimsDirectory(function () {
+    ensurePathShimmed(cb)
+  })
+}
+
+
+exports.isProjectDirectory = function (dir, cb) {
+  fs.exists(path.join(dir, 'node_modules'), function (exists) {
+    if (exists) return cb(exists)
+    fs.exists(path.join(dir, 'package.json'), cb)
+  })
+}
+
+exports.findProjectDirectory = function (dir, cb) {
+  findup(dir, exports.isProjectDirectory, function (err, projectDirectory) {
+    if (err && err.message === "not found") return cb(null, null)
+    if (err) return cb(err)
+    cb(null, projectDirectory)
+  })
+}
+
+exports.shimContents = function (shimName) {
+  return 'lobal exec "' + shimName + '"'
+}
+
+exports.addShim = function (shimName, cb) {
+  var destination = path.join(exports.shimsDirectory, shimName)
+  fs.exists(destination, function (exists) {
+    if (exists) return cb(new Error('Error: Shim already exists'))
+    fs.appendFile(destination, exports.shimContents(shimName), {mode: 0755}, cb)
+  })
+}
+
+exports.removeShim = function (shimName, cb) {
+  var destination = path.join(exports.shimsDirectory, shimName)
+  fs.exists(destination, function (exists) {
+    if (!exists) return cb(new Error('Error: No shim to remove'))
+    fs.unlink(destination, cb)
+  })
+}
+
+exports.runCommand = function (file, args) {
+  child_process.spawn(file, (args || []), {
+    stdio: 'inherit'
+  })
+}
+
+function readPackageInfo (pkg, cb) {
+  fs.readFile(path.join(pkg, 'package.json'), function (err, contents) {
+    if (err || !contents.length) return cb({})
+    try {
+      // handle not having a package.json, just node_modules
+      cb(JSON.parse(contents.toString()))
+    }
+    catch (err) {
+      console.error('Error parsing ' + pkg + ' package.json')
+      throw err
+    }
+  })
+}
+
+exports.cli = function (argv, cwd) {
+  var args = argv.slice(2)
+  var lobalArgs = args.slice(0, 2)
+  var passthroughArgs = args.slice(2)
+
+  nomnom
+    .script('lobal')
+    .help('lobal is a program that allows you to add "shims" which are little executable files that can be run from anywhere in your terminal. Shims just run a binary with the same name as themselves. If you run a shim from an npm package directory it will try to use the locally installed binary, otherwise it will use the globally installed binary.')
+
+  nomnom.command('exec')
+    .help('Execute <module> in cwd project or global')
+    .options({
+      module: {
+        position: 1,
+        required: true
+      }
+    })
+    .callback(function (options) {
+      console.log('exec', options)
+      exports.findProjectDirectory(cwd, function (err, wdModule) {
+        if (err) throw err
+
+        var localModule = path.join(wdModule, 'node_modules', '.bin', options.module)
+
+        fs.exists(localModule, function (localModuleExists) {
+          readPackageInfo(wdModule, function (wdPackage) {
+            if (localModuleExists) {
+              var message = 'Using local ' + options.module + ' from'
+              if (wdPackage.name) message += ' "' + wdPackage.name + '"'
+              else message +=  ' "' + wdModule + '"'
+              exports.log(message)
+              exports.runCommand(localModule, passthroughArgs)
+            }
+            else {
+              npm.load({global: true, silent: true}, function () {
+                npm.commands.bin([], true, function (err, globalBinFolder) {
+                  var globalModule = path.join(globalBinFolder, options.module)
+
+                  fs.exists(globalModule, function (globalModuleExists) {
+                    if (globalModuleExists) {
+                      exports.log('Using global ' + options.module)
+                      exports.runCommand(globalModule, passthroughArgs)
+                    }
+                    else {
+                      console.error('Couldn\'t find module "' + options.module + '" \n'
+                        + 'Tried \"' + localModule + '\"\nand \"' + globalModule + '\"')
+                      process.exit(1)
+                    }
+                  })
+                })//  /
+              })//   />-|o  - These are some steep moguls!
+            }//     /
+          })
+        })
+      })
+    })
+
+  nomnom.command('add')
+    .help('Add a shim')
+    .options({
+      module: {
+        position: 1,
+        required: true
+      }
+    })
+    .callback(function (options) {
+      exports.ensureSetUp(function () {
+        exports.addShim(options.module, function (err) {
+          if (err) console.error(err.message), process.exit(1)
+          exports.log('Added!')
+          process.exit(0)
+        })
+      })
+    })
+
+  nomnom.command('remove')
+    .help('Remove a shim')
+    .options({
+      module: {
+        position: 1,
+        required: true
+      }
+    })
+    .callback(function (options) {
+      exports.removeShim(options.module, function (err) {
+        if (err) console.error(err.message), process.exit(1)
+        exports.log('Removed!')
+        process.exit(0)
+      })
+    })
+
+  nomnom.parse(lobalArgs)
+}
+
+if (module === require.main) {
+  exports.cli(process.argv, process.cwd())
+}
