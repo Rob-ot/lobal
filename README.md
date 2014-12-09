@@ -18,10 +18,10 @@ $ cd ~/project1
 ~/project1$ npm install coffee-script@1.7.0
 ~/project1$ coffee -v
 CoffeeScript version 1.7.0
-~/project1$ cd ../project2$
-~/project2$ npm install coffee-script@1.8.1
+~/project1$ cd ../project2
+~/project2$ npm install coffee-script@1.8.0
 ~/project2$ coffee -v
-CoffeeScript version 1.8.1
+CoffeeScript version 1.8.0
 
 # lobal will also use the globally installed module if you arent in a project directory
 ~/project2$ npm install -g coffee-script@1.6.0
