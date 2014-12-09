@@ -50,7 +50,7 @@ function ensurePathShimmed (cb) {
       var index = file.toString().indexOf('.lobal_shims')
       if (index >= 0) return cb()
 
-      exports.log('Adding PATH entry to ' + bashFile)
+      exports.log('Adding PATH entry to ' + bashFile + ' please start a new terminal session for changes to take affect.')
       fs.appendFile(bashFile, exports.bashPathEntry(), function (err) {
         if (err) throw err
         cb()
