@@ -1,6 +1,6 @@
 {
   "name": "lobal",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use the local version of global npm modules",
   "main": "lobal",
   "bin": {
